@@ -15,7 +15,14 @@
 
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    NonNegativeInt,
+    PositiveInt,
+    field_validator,
+)
 
 from zenml.utils.time_utils import utc_now
 
@@ -47,3 +54,35 @@ class ExecutionArchivePolicy(BaseModel):
     )
 
     model_config = ConfigDict(frozen=True)
+
+
+class ExecutionArchiveTarget(BaseModel):
+    """Immutable object-storage destination for execution archives."""
+
+    bucket: str = Field(min_length=3, max_length=63)
+    key_prefix: str = Field(default="", max_length=512)
+    kms_key_id: str = Field(min_length=1, max_length=2048)
+    object_lock_days: PositiveInt = Field(default=365)
+
+    model_config = ConfigDict(frozen=True)
+
+    @field_validator("key_prefix")
+    @classmethod
+    def _normalize_key_prefix(cls, value: str) -> str:
+        """Normalize and validate the configured object key prefix.
+
+        Args:
+            value: Configured prefix.
+
+        Returns:
+            The normalized prefix without leading or trailing separators.
+
+        Raises:
+            ValueError: If the prefix contains relative path components.
+        """
+        normalized = value.strip("/")
+        if any(part in {".", ".."} for part in normalized.split("/")):
+            raise ValueError(
+                "Archive key prefixes cannot contain '.' or '..'."
+            )
+        return normalized

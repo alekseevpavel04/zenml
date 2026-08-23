@@ -74,6 +74,10 @@ class ExecutionArchiveSchema(BaseSchema, table=True):
         default=None,
         sa_column=Column(String(64), nullable=True),
     )
+    manifest_stored_bytes: Optional[int] = Field(
+        default=None,
+        sa_column=Column(BigInteger, nullable=True),
+    )
     canonical_bytes: Optional[int] = Field(
         default=None,
         sa_column=Column(BigInteger, nullable=True),

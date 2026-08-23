@@ -34,6 +34,7 @@ def upgrade() -> None:
         sa.Column("manifest_key", sa.TEXT(), nullable=True),
         sa.Column("manifest_version_id", sa.TEXT(), nullable=True),
         sa.Column("manifest_sha256", sa.String(length=64), nullable=True),
+        sa.Column("manifest_stored_bytes", sa.BigInteger(), nullable=True),
         sa.Column("canonical_bytes", sa.BigInteger(), nullable=True),
         sa.Column("stored_bytes", sa.BigInteger(), nullable=True),
         sa.Column("checkpoint", sa.TEXT(), nullable=True),
