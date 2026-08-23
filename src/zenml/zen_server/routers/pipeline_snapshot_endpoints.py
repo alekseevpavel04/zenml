@@ -71,6 +71,7 @@ from zenml.zen_server.rbac.utils import (
 )
 from zenml.zen_server.utils import (
     async_fastapi_endpoint_wrapper,
+    execution_history_reader,
     make_dependable,
     server_config,
     zen_store,
@@ -143,7 +144,7 @@ def list_pipeline_snapshots(
     return verify_permissions_and_list_entities(
         filter_model=snapshot_filter_model,
         resource_type=ResourceType.PIPELINE_SNAPSHOT,
-        list_method=zen_store().list_snapshots,
+        list_method=execution_history_reader().list_snapshots,
         hydrate=hydrate,
     )
 
@@ -176,7 +177,7 @@ def get_pipeline_snapshot(
     """
     return verify_permissions_and_get_entity(
         id=snapshot_id,
-        get_method=zen_store().get_snapshot,
+        get_method=execution_history_reader().get_snapshot,
         hydrate=hydrate,
         step_configuration_filter=step_configuration_filter,
         include_config_schema=include_config_schema,

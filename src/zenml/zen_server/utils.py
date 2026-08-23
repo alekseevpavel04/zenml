@@ -34,6 +34,7 @@ from typing import (
     Type,
     TypeVar,
     Union,
+    cast,
     overload,
 )
 from uuid import UUID
@@ -68,6 +69,7 @@ from zenml.zen_server.rbac.rbac_interface import RBACInterface
 from zenml.zen_server.request_management import RequestContext, RequestManager
 from zenml.zen_server.streaming.broadcaster import StreamBroadcaster
 from zenml.zen_server.streaming.brokers.base import StreamBroker
+from zenml.zen_stores.execution_archive import ExecutionHistoryReader
 from zenml.zen_stores.resource_pools.store_interface import (
     ResourcePoolsSQLStoreInterface,
 )
@@ -122,6 +124,15 @@ def zen_store() -> "SqlZenStore":
     if _zen_store is None:
         raise RuntimeError("ZenML Store not initialized")
     return _zen_store
+
+
+def execution_history_reader() -> ExecutionHistoryReader:
+    """Return the internal execution-history reader.
+
+    Returns:
+        The current hot SQL store through the execution-history contract.
+    """
+    return cast(ExecutionHistoryReader, zen_store())
 
 
 def rbac() -> RBACInterface:

@@ -123,6 +123,7 @@ from zenml.zen_server.streaming.types import RESERVED_STREAM_EVENT_KINDS
 from zenml.zen_server.utils import (
     async_fastapi_endpoint_wrapper,
     async_handle_endpoint_errors,
+    execution_history_reader,
     make_dependable,
     server_config,
     set_filter_project_scope,
@@ -230,7 +231,7 @@ def list_runs(
     return verify_permissions_and_list_entities(
         filter_model=runs_filter_model,
         resource_type=ResourceType.PIPELINE_RUN,
-        list_method=zen_store().list_runs,
+        list_method=execution_history_reader().list_runs,
         hydrate=hydrate,
         include_full_metadata=include_full_metadata,
     )
@@ -310,9 +311,10 @@ def get_run(
         The pipeline run.
     """
     store = zen_store()
+    history_reader = execution_history_reader()
     run = verify_permissions_and_get_entity(
         id=run_id,
-        get_method=store.get_run,
+        get_method=history_reader.get_run,
         hydrate=hydrate,
         include_python_packages=include_python_packages,
         include_full_metadata=include_full_metadata,
@@ -407,10 +409,12 @@ def get_run_steps(
         The steps for a given pipeline run.
     """
     verify_permissions_and_get_entity(
-        id=run_id, get_method=zen_store().get_run, hydrate=False
+        id=run_id,
+        get_method=execution_history_reader().get_run,
+        hydrate=False,
     )
     step_run_filter_model.pipeline_run_id = run_id
-    return zen_store().list_run_steps(step_run_filter_model)
+    return execution_history_reader().list_run_steps(step_run_filter_model)
 
 
 @router.get(
@@ -431,7 +435,9 @@ def get_pipeline_configuration(
         The pipeline configuration of the pipeline run.
     """
     run = verify_permissions_and_get_entity(
-        id=run_id, get_method=zen_store().get_run, hydrate=True
+        id=run_id,
+        get_method=execution_history_reader().get_run,
+        hydrate=True,
     )
     return run.config.model_dump()
 
@@ -454,7 +460,9 @@ def get_run_status(
         The status of the pipeline run.
     """
     run = verify_permissions_and_get_entity(
-        id=run_id, get_method=zen_store().get_run, hydrate=False
+        id=run_id,
+        get_method=execution_history_reader().get_run,
+        hydrate=False,
     )
     return run.status
 
@@ -482,10 +490,10 @@ def get_run_dag(
     # TODO: Maybe avoid calling get_run twice?
     verify_permissions_and_get_entity(
         id=run_id,
-        get_method=zen_store().get_run,
+        get_method=execution_history_reader().get_run,
         hydrate=False,
     )
-    return zen_store().get_pipeline_run_dag(
+    return execution_history_reader().get_pipeline_run_dag(
         pipeline_run_id=run_id, include_step_metadata=include_step_metadata
     )
 
@@ -736,7 +744,7 @@ if server_config().workload_manager_enabled:
 
         run = verify_permissions_and_get_entity(
             id=run_id,
-            get_method=zen_store().get_run,
+            get_method=execution_history_reader().get_run,
             hydrate=True,
         )
 

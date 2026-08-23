@@ -61,6 +61,7 @@ from zenml.zen_server.rbac.utils import (
 )
 from zenml.zen_server.utils import (
     async_fastapi_endpoint_wrapper,
+    execution_history_reader,
     make_dependable,
     set_filter_project_scope,
     zen_store,
@@ -111,7 +112,7 @@ def list_run_steps(
         pipeline_run_id=allowed_pipeline_run_ids,
     )
 
-    page = zen_store().list_run_steps(
+    page = execution_history_reader().list_run_steps(
         step_run_filter_model=step_run_filter_model, hydrate=hydrate
     )
     return dehydrate_page(page)
@@ -166,8 +167,9 @@ def get_step(
     # We always fetch the step hydrated because we need the pipeline_run_id
     # for the permission checks. If the user requested an unhydrated response,
     # we later remove the metadata
-    step = zen_store().get_run_step(step_id, hydrate=True)
-    pipeline_run = zen_store().get_run(step.pipeline_run_id)
+    history_reader = execution_history_reader()
+    step = history_reader.get_run_step(step_id, hydrate=True)
+    pipeline_run = history_reader.get_run(step.pipeline_run_id)
     verify_permission_for_model(pipeline_run, action=Action.READ)
 
     if hydrate is False:
